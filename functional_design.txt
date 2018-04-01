@@ -1,0 +1,194 @@
+File: syntax_analyzer.c
+
+	There are no functions except main in this file. Main checks if file exist and then runs it through the parser
+	and lexical analyzer. If the file does not exist, the user will be notified and the program exits. 
+
+
+
+File: RDP.c
+
+	GLOBALS:
+		ID -> is defined as 300, a token for parsing/lexical purposes
+		NUM -> is defined as 301, a token for parsing/lexical purposes
+		BEGIN -> is defined as 400, a token for parsing/lexical purposes
+		END -> is defined as 401, a token for parsing/lexical purposes
+		lookahead -> an integer that has the next token in line
+		line_number -> an integer that is the current line number the parser is on in the program
+		symbol_table -> a rudimentary table that has records of all identifiers used in the program
+		count_symbol -> an integer that acts as the index for the symbol table
+		fp -> a file pointer to the file that the user referenced in the command line arguments
+		test_string -> contains current ID or NUM, for use of registers and post-fix representation
+		post_fix_table -> a table that contains operators and factors in post-fix notation
+		post_fix -> a counter that goes through the post_fix_table
+		reg_count -> holds the total number of registers currently being used
+		final_table -> a table that holds every information needed for the output file
+		final_count -> a counter that goes through the final_table
+
+	FUNCTIONS:
+
+		/**
+		Parses a program and checks its syntax.
+		If program is legal, print the confirmation and display the symbol table.
+		If not, print error. 
+		**/
+		int parser(FILE *FP);
+
+		/**
+		Checks if the next token is legal,
+		if not, print the error_message() and exit syntax analyzer.
+		Parameter: an integer called tokenID that is the token to check for.
+		**/
+		void match(int tokenID);
+
+		/**
+		Checks the next character if it is...
+		-> a space or tab, do nothing
+		-> new line, increase line number location in program
+		-> a digit, build up a number, return NUM
+		-> a character, build up a value and put it in a symbol table, return ID
+		-> End of File, leave lexan()
+		-> anything else, return it from lexan()
+		Returns: a character or token ID.
+		**/
+		int lexan();
+
+		/**
+		Create a symbol table that can be called anywhere in this parser/lexical analyzer.
+		**/
+		void create_symbol_table();
+
+		/**
+		Prints out the symbol table at the end of a successful program syntax check
+		**/
+		void print_symbol_table();
+
+		/**
+		Looks up symbol table and checks if identifier already exists.
+		Parameter: a character array called value which is the identifier stored in the symbol table
+		Returns: 1 if true, 0 if false
+		**/
+		int symbol_table_lookup(char *value);
+
+		/**
+		Prints an error message depending on what is missing in the format of...
+		"ERROR:: Line #: error message
+		Parameter: an integer called token ID, this token ID is what is missing.
+		**/
+		void error_message(int tokenID);
+
+		/**
+		Checks if there is any characters after 'end .', if there is, state error end exit syntax analyzer.
+		**/
+		void error_EOF();
+
+		/**
+		Reads the single-line comment and terminates at the next line.
+		**/
+		void read_comment(char ch);
+
+		/**
+		Checks if the next character is a newline. 
+		If so, returns 1, else return 0. 
+		Parameter: a character that is the next in the line being parsed.
+		Return: If next character is a '\n', return 1.
+		**/
+		int checkNextCharinComment(char x);
+
+		/**
+		Checks if the identifier is valid or not by first building up the identifier and then checking if it is
+		legal or not.
+		Parameter: The character that starts the ID creation sequence. 
+		Return: returns a token ID or error
+		**/
+		int isvalid_ID(char ch);
+
+		/**
+		If the next character is space,+,-,/,*,=,(,) return 1
+		else 0.
+		1 means that I should stop building up the identifier for ID.
+		0 means keep building up the identifier. 
+		Parameter: a character that can't be any of the above mentioned.
+		Return: 1 if it is, 0 if it not.
+		**/
+		int checkNextChar(char ch);
+
+		/**
+		Checks if the ID is legal or not. 
+		Illegal IDs are...
+		- has double _ in the identifier
+		- has an _ at the end of the identifier
+		- has an _ at the beginning of the identifier
+		- has a number in the front of the identifier (taken care of in function check_NUM)
+		Parameter: value is a character array that is the identifier, count is how long the character array is		
+		Return: 1 if it is a legal identifier, 0 if it is not.
+		**/
+		int check_ID(char *value, int count);
+
+		/**
+		Checks if number is legal or not. 
+		Number is illegal if...
+		-> The number starts with a digit but has a character in the tail.
+			ex: 7a34234
+		Parameter: ch is a character array of numbers.
+		Return: 1 if it is a legal number, 0 if it is not.
+		**/
+		int isvalid_NUM(char ch);
+
+		/**
+		Checks for the illegal case mentioned in isvalid_NUM().
+		If found, report error and exit syntax analyzation.
+		Parameter: value is a character array that is the number, count is the amount of characters
+		Return: 1 if its legal, 0 if it is not.		
+		**/
+		int check_NUM(char *value, int count);
+
+		/**
+		Checks if ID is the first thing in the statement, if so, create the statement for the identifier.
+		If the next legal character is '=', start creating the expression for the identifier, then close it once
+		a ';' is encountered!
+		**/
+		void assign_stmt();
+
+		/**
+		Starts building the expression by first identifying the term. Once term is identified, 
+		expression() looks for + or - and builds another term to go after it. 
+		**/
+		void expression();
+
+		/**
+		Starts building the term by first identifying a factor in the expression. 
+		Once the factor is built up, term() looks for a * or + and finds another factor in the expression.
+		**/
+		void term();
+
+		/**
+		Looks for an ID, NUM or parentheses. If an open parantheses is found, build another expression
+		until a closing parantheses is found.
+		**/
+		void factor();
+		
+		/**
+		Creates a file that contains information
+		such as uses of registers to compile statements, 
+		post-fix representation of statements and
+		the symbol table for the program as a whole.
+		**/
+		void create_output_file(char *filename);
+
+		/**
+		Clears the post-fix presentation to be used for another
+		statement. 
+		**/
+		void clear_post_fix_builder();
+
+		/**
+		Builds up the post-fix presentation of the current 
+		statement. 
+		**/
+		void post_fix_builder(int i);
+
+		/**
+		Displays the post-fix presentation of what
+		was assigned to a variable in a statement.
+		**/
+		void display_post_fix();

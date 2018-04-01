@@ -1,0 +1,18 @@
+gcc -c syntax_analyzer.c RDP.c
+gcc -o syntax syntax_analyzer.o RDP.o
+echo Testing "test1.c"
+./syntax test1.c
+echo Testing "test2.c"
+./syntax test2.c
+echo Testing "test3.c"
+./syntax test3.c
+echo Testing "test4.c"
+./syntax test4.c
+echo Testing "test5.c"
+./syntax test5.c
+echo Testing "test6.c"
+./syntax test6.c
+echo Testing "test7.c"
+./syntax test7.c
+echo Testing "test8.c"
+./syntax test8.c
